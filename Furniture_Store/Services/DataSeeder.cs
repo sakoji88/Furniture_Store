@@ -104,17 +104,62 @@ public static class DataSeeder
             return;
         }
 
-        const string addIsBannedColumnSql = """
+        const string addMissingColumnsSql = """
+            -- Users
             IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
                AND COL_LENGTH('Users', 'IsBanned') IS NULL
             BEGIN
                 ALTER TABLE [Users] ADD [IsBanned] bit NOT NULL CONSTRAINT [DF_Users_IsBanned] DEFAULT(0);
             END
+
+            -- Categories
+            IF OBJECT_ID(N'[Categories]', N'U') IS NOT NULL
+               AND COL_LENGTH('Categories', 'Description') IS NULL
+            BEGIN
+                ALTER TABLE [Categories] ADD [Description] nvarchar(300) NULL;
+            END
+
+            -- Products (для старых схем)
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'Article') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [Article] nvarchar(50) NOT NULL CONSTRAINT [DF_Products_Article] DEFAULT(N'');
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'QuantityInStock') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [QuantityInStock] int NOT NULL CONSTRAINT [DF_Products_QuantityInStock] DEFAULT(0);
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'Material') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [Material] nvarchar(80) NULL;
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'Color') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [Color] nvarchar(50) NULL;
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'Description') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [Description] nvarchar(1000) NULL;
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'IsArchived') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [IsArchived] bit NOT NULL CONSTRAINT [DF_Products_IsArchived] DEFAULT(0);
+            END
             """;
 
         try
         {
-            await context.Database.ExecuteSqlRawAsync(addIsBannedColumnSql);
+            await context.Database.ExecuteSqlRawAsync(addMissingColumnsSql);
         }
         catch (SqlException)
         {
