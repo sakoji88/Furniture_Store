@@ -1,0 +1,11 @@
+@model Category
+<form method="post" class="card p-4">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" maxlength="100" /><span asp-validation-for="Name" class="text-danger"></span></div>
+    <div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" maxlength="300" rows="3"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+    <button class="btn btn-success">Сохранить</button>
+    <a asp-action="Index" class="btn btn-secondary">Назад</a>
+</form>
+<partial name="_ValidationScriptsPartial" />
