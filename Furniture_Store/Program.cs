@@ -61,4 +61,15 @@ catch (Exception exception)
     logger.LogError(exception, "Не удалось выполнить сидирование данных. Приложение продолжит работу.");
 }
 
+try
+{
+    await DataSeeder.SeedAsync(app.Services);
+}
+catch (Exception exception)
+{
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    logger.LogError(exception, "Не удалось выполнить сидирование данных. Приложение продолжит работу.");
+}
+
 app.Run();
