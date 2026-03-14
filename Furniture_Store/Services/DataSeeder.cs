@@ -268,6 +268,20 @@ public static class DataSeeder
                           1
                       );');
 
+                DECLARE @dfName nvarchar(128);
+                SELECT @dfName = dc.name
+                FROM sys.default_constraints dc
+                INNER JOIN sys.columns c
+                    ON c.object_id = dc.parent_object_id
+                   AND c.column_id = dc.parent_column_id
+                WHERE dc.parent_object_id = OBJECT_ID(N'[Orders]')
+                  AND c.name = 'Status';
+
+                IF @dfName IS NOT NULL
+                BEGIN
+                    EXEC(N'ALTER TABLE [Orders] DROP CONSTRAINT [' + @dfName + '];');
+                END
+
                 EXEC(N'ALTER TABLE [Orders] DROP COLUMN [Status];');
                 EXEC sp_rename 'Orders.StatusIntTemp', 'Status', 'COLUMN';
             END
