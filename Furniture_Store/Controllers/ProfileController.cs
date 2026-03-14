@@ -21,13 +21,22 @@ public class ProfileController(ApplicationDbContext dbContext) : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        var orders = await dbContext.Orders
-            .Include(o => o.Items)
-                .ThenInclude(i => i.Product)
-            .AsNoTracking()
-            .Where(o => o.UserId == userId)
-            .OrderByDescending(o => o.CreatedAt)
-            .ToListAsync();
+        List<Models.Order> orders;
+        try
+        {
+            orders = await dbContext.Orders
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                .AsNoTracking()
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+        catch (InvalidCastException)
+        {
+            TempData["Error"] = "Обнаружена старая несовместимая схема таблицы заказов. Перезапустите приложение для автоисправления БД.";
+            return RedirectToAction("Index", "Products");
+        }
 
         return View(new ProfileViewModel
         {
