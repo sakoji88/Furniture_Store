@@ -1,0 +1,31 @@
+@model IReadOnlyList<UserManagementViewModel>
+@{ ViewData["Title"] = "Пользователи"; }
+<h2>Пользователи</h2>
+<form method="get" class="mb-3 d-flex gap-2"><input name="search" class="form-control" maxlength="150" placeholder="Поиск по имени/email" /><button class="btn btn-primary">Искать</button></form>
+<div class="table-responsive">
+<table class="table table-bordered align-middle">
+    <thead><tr><th>Имя</th><th>Email</th><th>Роль</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.FullName</td><td>@user.Email</td><td>@user.Role</td><td>@(user.IsBanned ? "Заблокирован" : "Активен")</td><td>@user.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</td>
+            <td class="d-flex gap-1">
+                @if (user.IsBanned)
+                {
+                    <form asp-action="Unban" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@user.Id" /><button class="btn btn-sm btn-success">Разбанить</button></form>
+                }
+                else
+                {
+                    <form asp-action="Ban" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@user.Id" /><button class="btn btn-sm btn-danger">Забанить</button></form>
+                }
+                @if (user.Role != "Admin")
+                {
+                    <form asp-action="PromoteToAdmin" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@user.Id" /><button class="btn btn-sm btn-warning">Сделать админом</button></form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>
