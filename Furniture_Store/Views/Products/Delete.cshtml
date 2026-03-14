@@ -1,0 +1,10 @@
+@model Product
+@{ ViewData["Title"] = "Удаление товара"; }
+<div class="alert alert-danger">
+    <h4>Удалить товар «@Model.Name»?</h4>
+    <form method="post">
+        @Html.AntiForgeryToken()
+        <button class="btn btn-danger">Да, удалить</button>
+        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>

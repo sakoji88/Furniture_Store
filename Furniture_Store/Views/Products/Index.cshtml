@@ -1,0 +1,61 @@
+@model ProductListPageViewModel
+@{ ViewData["Title"] = "Каталог"; }
+
+<h2>Каталог мебели</h2>
+<form method="get" class="row g-2 mb-3 filter-box">
+    <div class="col-md-3"><input asp-for="Filter.Search" class="form-control" maxlength="120" placeholder="Поиск" /></div>
+    <div class="col-md-2"><select asp-for="Filter.CategoryId" asp-items="Model.Filter.Categories" class="form-select"><option value="">Все категории</option></select></div>
+    <div class="col-md-2"><input asp-for="Filter.MinPrice" type="number" step="0.01" min="0" class="form-control" placeholder="Цена от" /></div>
+    <div class="col-md-2"><input asp-for="Filter.MaxPrice" type="number" step="0.01" min="0" class="form-control" placeholder="Цена до" /></div>
+    <div class="col-md-2"><select asp-for="Filter.SortBy" class="form-select"><option value="name">Название</option><option value="price">Цена</option><option value="category">Категория</option></select></div>
+    <div class="col-md-1"><select asp-for="Filter.SortDirection" class="form-select"><option value="asc">ASC</option><option value="desc">DESC</option></select></div>
+    <div class="col-12 d-flex gap-2">
+        <div class="form-check"><input asp-for="Filter.InStockOnly" class="form-check-input" /><label asp-for="Filter.InStockOnly" class="form-check-label"></label></div>
+        <button class="btn btn-primary">Применить</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Сбросить</a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-success ms-auto">Добавить товар</a>
+        }
+    </div>
+</form>
+
+@if (!Model.Products.Any())
+{
+    <div class="alert alert-warning">По выбранным критериям товары не найдены.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead><tr><th>Название</th><th>Артикул</th><th>Категория</th><th>Цена</th><th>В наличии</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var product in Model.Products)
+            {
+                <tr>
+                    <td>@product.Name</td><td>@product.Article</td><td>@product.Category?.Name</td><td>@product.Price.ToString("N2") ₽</td><td>@product.QuantityInStock</td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning">Изменить</a>
+                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Удалить</a>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.Filter.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Filter.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-Page="@i" asp-route-Search="@Model.Filter.Search" asp-route-CategoryId="@Model.Filter.CategoryId" asp-route-MinPrice="@Model.Filter.MinPrice" asp-route-MaxPrice="@Model.Filter.MaxPrice" asp-route-InStockOnly="@Model.Filter.InStockOnly" asp-route-SortBy="@Model.Filter.SortBy" asp-route-SortDirection="@Model.Filter.SortDirection">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

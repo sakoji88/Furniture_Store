@@ -1,0 +1,19 @@
+@model ProductCreateEditViewModel
+<form method="post" class="card p-4 shadow-sm">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-md-6"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" maxlength="120" /><span asp-validation-for="Name" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="Article" class="form-label"></label><input asp-for="Article" class="form-control" maxlength="50" /><span asp-validation-for="Article" class="text-danger"></span></div>
+        <div class="col-md-4"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" type="number" min="0.01" step="0.01" /></div>
+        <div class="col-md-4"><label asp-for="QuantityInStock" class="form-label"></label><input asp-for="QuantityInStock" class="form-control" type="number" min="0" step="1" /></div>
+        <div class="col-md-4"><label asp-for="CategoryId" class="form-label"></label><select asp-for="CategoryId" asp-items="Model.Categories" class="form-select"></select></div>
+        <div class="col-md-6"><label asp-for="Material" class="form-label"></label><input asp-for="Material" class="form-control" maxlength="80" /></div>
+        <div class="col-md-6"><label asp-for="Color" class="form-label"></label><input asp-for="Color" class="form-control" maxlength="50" /></div>
+        <div class="col-12"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" rows="4" maxlength="1000" class="form-control"></textarea></div>
+        <div class="col-12 form-check"><input asp-for="IsArchived" class="form-check-input" /><label asp-for="IsArchived" class="form-check-label"></label></div>
+    </div>
+    <div class="mt-3 d-flex gap-2"><button class="btn btn-success">Сохранить</button><a asp-action="Index" class="btn btn-outline-secondary">Отмена</a></div>
+</form>
+<partial name="_ValidationScriptsPartial" />
