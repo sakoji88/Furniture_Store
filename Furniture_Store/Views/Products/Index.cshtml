@@ -1,21 +1,27 @@
 @model ProductListPageViewModel
 @{ ViewData["Title"] = "Каталог"; }
 
-<h2>Каталог мебели</h2>
-<form method="get" class="row g-2 mb-3 filter-box">
-    <div class="col-md-3"><input asp-for="Filter.Search" class="form-control" maxlength="120" placeholder="Поиск" /></div>
+<section class="catalog-hero mb-4">
+    <div>
+        <h2 class="mb-1">Каталог мебели</h2>
+        <p class="text-muted mb-0">Выберите стильный товар для вашего дома</p>
+    </div>
+</section>
+
+<form method="get" class="row g-2 mb-4 filter-box">
+    <div class="col-md-3"><input asp-for="Filter.Search" class="form-control" maxlength="120" placeholder="Поиск: название, артикул, материал" /></div>
     <div class="col-md-2"><select asp-for="Filter.CategoryId" asp-items="Model.Filter.Categories" class="form-select"><option value="">Все категории</option></select></div>
     <div class="col-md-2"><input asp-for="Filter.MinPrice" type="number" step="0.01" min="0" class="form-control" placeholder="Цена от" /></div>
     <div class="col-md-2"><input asp-for="Filter.MaxPrice" type="number" step="0.01" min="0" class="form-control" placeholder="Цена до" /></div>
     <div class="col-md-2"><select asp-for="Filter.SortBy" class="form-select"><option value="name">Название</option><option value="price">Цена</option><option value="category">Категория</option></select></div>
-    <div class="col-md-1"><select asp-for="Filter.SortDirection" class="form-select"><option value="asc">ASC</option><option value="desc">DESC</option></select></div>
-    <div class="col-12 d-flex gap-2">
+    <div class="col-md-1"><select asp-for="Filter.SortDirection" class="form-select"><option value="asc">↑</option><option value="desc">↓</option></select></div>
+    <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
         <div class="form-check"><input asp-for="Filter.InStockOnly" class="form-check-input" /><label asp-for="Filter.InStockOnly" class="form-check-label"></label></div>
         <button class="btn btn-primary">Применить</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Сбросить</a>
         @if (User.IsInRole("Admin"))
         {
-            <a asp-action="Create" class="btn btn-success ms-auto">Добавить товар</a>
+            <a asp-action="Create" class="btn btn-success ms-md-auto">+ Добавить товар</a>
         }
     </div>
 </form>
@@ -26,29 +32,49 @@
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped align-middle">
-            <thead><tr><th>Название</th><th>Артикул</th><th>Категория</th><th>Цена</th><th>В наличии</th><th></th></tr></thead>
-            <tbody>
-            @foreach (var product in Model.Products)
-            {
-                <tr>
-                    <td>@product.Name</td><td>@product.Article</td><td>@product.Category?.Name</td><td>@product.Price.ToString("N2") ₽</td><td>@product.QuantityInStock</td>
-                    <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">Подробнее</a>
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning">Изменить</a>
-                            <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Удалить</a>
-                        }
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+    <div class="row g-4">
+        @foreach (var product in Model.Products)
+        {
+            var image = string.IsNullOrWhiteSpace(product.ImageUrl)
+                ? "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80"
+                : product.ImageUrl;
+
+            <div class="col-sm-6 col-lg-4">
+                <article class="product-card h-100">
+                    <img class="product-image" src="@image" alt="@product.Name" loading="lazy" />
+                    <div class="product-body d-flex flex-column">
+                        <div class="small text-muted">@product.Category?.Name • @product.Article</div>
+                        <h5 class="product-title mt-1">@product.Name</h5>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-end mb-2">
+                                <div class="product-price">@product.Price.ToString("N0") ₽</div>
+                                <small class="text-muted">В наличии: @product.QuantityInStock</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <button class="btn btn-sm btn-primary" @(product.QuantityInStock == 0 ? "disabled" : null)>В корзину</button>
+                                    </form>
+                                }
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-sm btn-warning">Редактировать</a>
+                                    <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-sm btn-danger">Удалить</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        }
     </div>
 
-    <nav>
+    <nav class="mt-4">
         <ul class="pagination">
             @for (int i = 1; i <= Model.Filter.TotalPages; i++)
             {

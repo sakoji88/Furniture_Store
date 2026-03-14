@@ -65,6 +65,7 @@ public static class DataSeeder
                     QuantityInStock = 8,
                     Material = "Ткань",
                     Color = "Серый",
+                    ImageUrl = "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80",
                     Description = "Удобный трехместный диван в скандинавском стиле.",
                     CategoryId = divan.Id
                 },
@@ -76,6 +77,7 @@ public static class DataSeeder
                     QuantityInStock = 12,
                     Material = "Массив дуба",
                     Color = "Натуральный",
+                    ImageUrl = "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
                     Description = "Обеденный стол на 6 персон.",
                     CategoryId = table.Id
                 },
@@ -87,6 +89,7 @@ public static class DataSeeder
                     QuantityInStock = 5,
                     Material = "ЛДСП",
                     Color = "Белый",
+                    ImageUrl = "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?auto=format&fit=crop&w=900&q=80",
                     Description = "Трехдверный шкаф с зеркалом.",
                     CategoryId = wardrobe.Id
                 });
@@ -154,6 +157,50 @@ public static class DataSeeder
                AND COL_LENGTH('Products', 'IsArchived') IS NULL
             BEGIN
                 ALTER TABLE [Products] ADD [IsArchived] bit NOT NULL CONSTRAINT [DF_Products_IsArchived] DEFAULT(0);
+            END
+
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'ImageUrl') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [ImageUrl] nvarchar(250) NULL;
+            END
+
+            IF OBJECT_ID(N'[CartItems]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [CartItems](
+                    [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                    [UserId] int NOT NULL,
+                    [ProductId] int NOT NULL,
+                    [Quantity] int NOT NULL CONSTRAINT [DF_CartItems_Quantity] DEFAULT(1),
+                    [AddedAt] datetime2 NOT NULL CONSTRAINT [DF_CartItems_AddedAt] DEFAULT (SYSUTCDATETIME())
+                );
+
+                CREATE UNIQUE INDEX [IX_CartItems_UserId_ProductId] ON [CartItems]([UserId],[ProductId]);
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [Orders](
+                    [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                    [UserId] int NOT NULL,
+                    [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_Orders_CreatedAt] DEFAULT (SYSUTCDATETIME()),
+                    [DeliveryAddress] nvarchar(200) NOT NULL CONSTRAINT [DF_Orders_DeliveryAddress] DEFAULT(N''),
+                    [RecipientName] nvarchar(100) NOT NULL CONSTRAINT [DF_Orders_RecipientName] DEFAULT(N''),
+                    [Phone] nvarchar(20) NOT NULL CONSTRAINT [DF_Orders_Phone] DEFAULT(N''),
+                    [TotalAmount] decimal(18,2) NOT NULL CONSTRAINT [DF_Orders_TotalAmount] DEFAULT(0),
+                    [Status] int NOT NULL CONSTRAINT [DF_Orders_Status] DEFAULT(1)
+                );
+            END
+
+            IF OBJECT_ID(N'[OrderItems]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [OrderItems](
+                    [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                    [OrderId] int NOT NULL,
+                    [ProductId] int NOT NULL,
+                    [Quantity] int NOT NULL CONSTRAINT [DF_OrderItems_Quantity] DEFAULT(1),
+                    [UnitPrice] decimal(18,2) NOT NULL CONSTRAINT [DF_OrderItems_UnitPrice] DEFAULT(0)
+                );
             END
             """;
 

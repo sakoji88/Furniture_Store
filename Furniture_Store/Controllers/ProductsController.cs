@@ -70,6 +70,7 @@ public class ProductsController(IProductRepository productRepository, Applicatio
             Material = model.Material,
             Color = model.Color,
             Description = model.Description,
+            ImageUrl = model.ImageUrl,
             CategoryId = model.CategoryId,
             IsArchived = model.IsArchived
         });
@@ -99,6 +100,7 @@ public class ProductsController(IProductRepository productRepository, Applicatio
             Material = product.Material,
             Color = product.Color,
             Description = product.Description,
+            ImageUrl = product.ImageUrl,
             CategoryId = product.CategoryId,
             IsArchived = product.IsArchived
         };
@@ -133,6 +135,7 @@ public class ProductsController(IProductRepository productRepository, Applicatio
         product.Material = model.Material;
         product.Color = model.Color;
         product.Description = model.Description;
+        product.ImageUrl = model.ImageUrl;
         product.CategoryId = model.CategoryId;
         product.IsArchived = model.IsArchived;
 
@@ -179,6 +182,7 @@ public class ProductsController(IProductRepository productRepository, Applicatio
         model.Material = model.Material?.Trim();
         model.Color = model.Color?.Trim();
         model.Description = model.Description?.Trim();
+        model.ImageUrl = model.ImageUrl?.Trim();
     }
 
     private async Task<ProductCreateEditViewModel> BuildFormViewModelAsync(ProductCreateEditViewModel vm)

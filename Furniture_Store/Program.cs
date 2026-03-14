@@ -26,6 +26,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 var app = builder.Build();
 
@@ -49,17 +50,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Products}/{action=Index}/{id?}");
-
-try
-{
-    await DataSeeder.SeedAsync(app.Services);
-}
-catch (Exception exception)
-{
-    using var scope = app.Services.CreateScope();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-    logger.LogError(exception, "Не удалось выполнить сидирование данных. Приложение продолжит работу.");
-}
 
 try
 {

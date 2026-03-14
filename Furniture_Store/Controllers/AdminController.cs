@@ -1,4 +1,5 @@
 using Furniture_Store.Data;
+using Furniture_Store.Models;
 using Furniture_Store.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -102,5 +103,33 @@ public class AdminController(ApplicationDbContext dbContext) : Controller
         ViewBag.RecentProducts = await dbContext.Products.Include(p => p.Category).OrderByDescending(p => p.Id).Take(10).ToListAsync();
         ViewBag.Categories = await dbContext.Categories.OrderBy(c => c.Name).ToListAsync();
         return View();
+    }
+
+    public async Task<IActionResult> Orders()
+    {
+        var orders = await dbContext.Orders
+            .Include(o => o.User)
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
+        return View(orders);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateOrderStatus(int orderId, OrderStatus status)
+    {
+        var order = await dbContext.Orders.FindAsync(orderId);
+        if (order is null)
+        {
+            TempData["Error"] = "Заказ не найден.";
+            return RedirectToAction(nameof(Orders));
+        }
+
+        order.Status = status;
+        await dbContext.SaveChangesAsync();
+        TempData["Success"] = "Статус заказа обновлён.";
+        return RedirectToAction(nameof(Orders));
     }
 }

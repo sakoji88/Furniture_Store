@@ -1,14 +1,42 @@
 @model Product
 @{ ViewData["Title"] = "Детали товара"; }
-<div class="card shadow-sm">
-    <div class="card-body">
-        <h3>@Model.Name</h3>
-        <p><b>Артикул:</b> @Model.Article</p>
-        <p><b>Категория:</b> @Model.Category?.Name</p>
-        <p><b>Цена:</b> @Model.Price.ToString("N2") ₽</p>
-        <p><b>Материал:</b> @Model.Material</p>
-        <p><b>Цвет:</b> @Model.Color</p>
-        <p><b>Описание:</b> @Model.Description</p>
-        <a asp-action="Index" class="btn btn-outline-secondary">Назад</a>
+
+@{
+    var image = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=80"
+        : Model.ImageUrl;
+}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <img src="@image" alt="@Model.Name" class="img-fluid rounded shadow-sm w-100" style="max-height:460px;object-fit:cover;" />
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm p-3">
+            <h3>@Model.Name</h3>
+            <p class="text-muted mb-2">Артикул: @Model.Article • Категория: @Model.Category?.Name</p>
+            <h4 class="mb-3">@Model.Price.ToString("N0") ₽</h4>
+            <p><b>Материал:</b> @Model.Material</p>
+            <p><b>Цвет:</b> @Model.Color</p>
+            <p><b>Наличие:</b> @Model.QuantityInStock шт.</p>
+            <p>@Model.Description</p>
+
+            <div class="d-flex flex-wrap gap-2">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-controller="Cart" asp-action="Add" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.Id" />
+                        <input type="hidden" name="quantity" value="1" />
+                        <button class="btn btn-primary" @(Model.QuantityInStock == 0 ? "disabled" : null)>Купить / В корзину</button>
+                    </form>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Редактировать</a>
+                }
+                <a asp-action="Index" class="btn btn-outline-secondary">Назад</a>
+            </div>
+        </div>
     </div>
 </div>

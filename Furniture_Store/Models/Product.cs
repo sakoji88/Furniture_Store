@@ -33,4 +33,10 @@ public class Product
     public Category? Category { get; set; }
 
     public bool IsArchived { get; set; }
+
+    [StringLength(250)]
+    public string? ImageUrl { get; set; }
+
+    public ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }

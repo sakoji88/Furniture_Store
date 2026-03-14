@@ -29,6 +29,10 @@ public class ProductCreateEditViewModel
     [StringLength(1000)]
     public string? Description { get; set; }
 
+    [StringLength(250)]
+    [Display(Name = "URL изображения")]
+    public string? ImageUrl { get; set; }
+
     [Display(Name = "Категория")]
     [Range(1, int.MaxValue)]
     public int CategoryId { get; set; }
