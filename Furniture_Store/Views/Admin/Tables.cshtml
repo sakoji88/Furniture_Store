@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "Обзор таблиц";
+    var products = ViewBag.RecentProducts as List<Product> ?? new();
+    var categories = ViewBag.Categories as List<Category> ?? new();
+}
+<h2>Обзор таблиц</h2>
+<h4>Последние товары</h4>
+<table class="table table-striped"><thead><tr><th>Название</th><th>Категория</th><th>Цена</th></tr></thead><tbody>
+@foreach (var p in products)
+{ <tr><td>@p.Name</td><td>@p.Category?.Name</td><td>@p.Price.ToString("N2") ₽</td></tr> }
+</tbody></table>
+<h4>Категории</h4>
+<ul class="list-group">@foreach (var c in categories){<li class="list-group-item">@c.Name — @c.Description</li>}</ul>
