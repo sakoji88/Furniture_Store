@@ -56,21 +56,21 @@ public class ProfileController(ApplicationDbContext dbContext) : Controller
                         ALTER TABLE [Orders] ADD [StatusIntTemp] int NOT NULL CONSTRAINT [DF_Orders_StatusIntTemp_Profile] DEFAULT(1);
                     END
 
-                    UPDATE [Orders]
-                    SET [StatusIntTemp] = COALESCE(
-                        CASE UPPER(CAST([Status] AS nvarchar(50)))
-                            WHEN 'PENDING' THEN 1
-                            WHEN 'PROCESSING' THEN 2
-                            WHEN 'SHIPPED' THEN 3
-                            WHEN 'COMPLETED' THEN 4
-                            WHEN 'CANCELLED' THEN 5
-                            ELSE NULL
-                        END,
-                        TRY_CAST([Status] AS int),
-                        1
-                    );
+                    EXEC(N'UPDATE [Orders]
+                        SET [StatusIntTemp] = COALESCE(
+                            CASE UPPER(CAST([Status] AS nvarchar(50)))
+                                WHEN ''PENDING'' THEN 1
+                                WHEN ''PROCESSING'' THEN 2
+                                WHEN ''SHIPPED'' THEN 3
+                                WHEN ''COMPLETED'' THEN 4
+                                WHEN ''CANCELLED'' THEN 5
+                                ELSE NULL
+                            END,
+                            TRY_CAST([Status] AS int),
+                            1
+                        );');
 
-                    ALTER TABLE [Orders] DROP COLUMN [Status];
+                    EXEC(N'ALTER TABLE [Orders] DROP COLUMN [Status];');
                     EXEC sp_rename 'Orders.StatusIntTemp', 'Status', 'COLUMN';
                 END
                 """);

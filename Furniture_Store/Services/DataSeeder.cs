@@ -241,22 +241,34 @@ public static class DataSeeder
                AND COL_LENGTH('Orders', 'StatusIntTemp') IS NULL
             BEGIN
                 ALTER TABLE [Orders] ADD [StatusIntTemp] int NOT NULL CONSTRAINT [DF_Orders_StatusIntTemp] DEFAULT(1);
+            END
 
-                UPDATE [Orders]
-                SET [StatusIntTemp] = COALESCE(
-                    CASE UPPER(CAST([Status] AS nvarchar(50)))
-                        WHEN 'PENDING' THEN 1
-                        WHEN 'PROCESSING' THEN 2
-                        WHEN 'SHIPPED' THEN 3
-                        WHEN 'COMPLETED' THEN 4
-                        WHEN 'CANCELLED' THEN 5
-                        ELSE NULL
-                    END,
-                    TRY_CAST([Status] AS int),
-                    1
-                );
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND EXISTS (
+                    SELECT 1
+                    FROM sys.columns c
+                    INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+                    WHERE c.object_id = OBJECT_ID(N'[Orders]')
+                      AND c.name = 'Status'
+                      AND t.name IN ('varchar', 'nvarchar', 'char', 'nchar')
+               )
+               AND COL_LENGTH('Orders', 'StatusIntTemp') IS NOT NULL
+            BEGIN
+                EXEC(N'UPDATE [Orders]
+                      SET [StatusIntTemp] = COALESCE(
+                          CASE UPPER(CAST([Status] AS nvarchar(50)))
+                              WHEN ''PENDING'' THEN 1
+                              WHEN ''PROCESSING'' THEN 2
+                              WHEN ''SHIPPED'' THEN 3
+                              WHEN ''COMPLETED'' THEN 4
+                              WHEN ''CANCELLED'' THEN 5
+                              ELSE NULL
+                          END,
+                          TRY_CAST([Status] AS int),
+                          1
+                      );');
 
-                ALTER TABLE [Orders] DROP COLUMN [Status];
+                EXEC(N'ALTER TABLE [Orders] DROP COLUMN [Status];');
                 EXEC sp_rename 'Orders.StatusIntTemp', 'Status', 'COLUMN';
             END
 
