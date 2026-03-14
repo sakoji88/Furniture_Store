@@ -1,5 +1,6 @@
 using Furniture_Store.Data;
 using Furniture_Store.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Furniture_Store.Services;
@@ -13,6 +14,7 @@ public static class DataSeeder
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
         await context.Database.MigrateAsync();
+        await EnsureBackwardCompatibleSchemaAsync(context);
 
         if (!await context.Roles.AnyAsync())
         {
@@ -90,6 +92,34 @@ public static class DataSeeder
                 });
 
             await context.SaveChangesAsync();
+        }
+    }
+
+    // Небольшой защитный слой для учебного проекта: если БД была создана в старой версии,
+    // добавляем недостающие колонки, чтобы приложение не падало с ошибкой "Invalid column name".
+    private static async Task EnsureBackwardCompatibleSchemaAsync(ApplicationDbContext context)
+    {
+        if (!await context.Database.CanConnectAsync())
+        {
+            return;
+        }
+
+        const string addIsBannedColumnSql = """
+            IF OBJECT_ID(N'[Users]', N'U') IS NOT NULL
+               AND COL_LENGTH('Users', 'IsBanned') IS NULL
+            BEGIN
+                ALTER TABLE [Users] ADD [IsBanned] bit NOT NULL CONSTRAINT [DF_Users_IsBanned] DEFAULT(0);
+            END
+            """;
+
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync(addIsBannedColumnSql);
+        }
+        catch (SqlException)
+        {
+            // Если таблица отличается от ожидаемой, оставляем обработку на уровне приложения/логов.
+            // Это лучше, чем аварийное завершение старта для учебного демо-проекта.
         }
     }
 }
