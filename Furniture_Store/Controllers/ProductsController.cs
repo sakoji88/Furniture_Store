@@ -61,19 +61,27 @@ public class ProductsController(IProductRepository productRepository, Applicatio
         if (!ModelState.IsValid)
             return View(await BuildFormViewModelAsync(model));
 
-        await productRepository.AddAsync(new Product
+        try
         {
-            Name = model.Name,
-            Article = model.Article,
-            Price = model.Price,
-            QuantityInStock = model.QuantityInStock,
-            Material = model.Material,
-            Color = model.Color,
-            Description = model.Description,
-            ImageUrl = model.ImageUrl,
-            CategoryId = model.CategoryId,
-            IsArchived = model.IsArchived
-        });
+            await productRepository.AddAsync(new Product
+            {
+                Name = model.Name,
+                Article = model.Article,
+                Price = model.Price,
+                QuantityInStock = model.QuantityInStock,
+                Material = model.Material,
+                Color = model.Color,
+                Description = model.Description,
+                ImageUrl = model.ImageUrl,
+                CategoryId = model.CategoryId,
+                IsArchived = model.IsArchived
+            });
+        }
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Не удалось сохранить товар. Проверьте поля: длину текста, обязательные значения и уникальность артикула.");
+            return View(await BuildFormViewModelAsync(model));
+        }
 
         TempData["Success"] = "Товар успешно добавлен.";
         return RedirectToAction(nameof(Index));
@@ -139,7 +147,15 @@ public class ProductsController(IProductRepository productRepository, Applicatio
         product.CategoryId = model.CategoryId;
         product.IsArchived = model.IsArchived;
 
-        await productRepository.UpdateAsync(product);
+        try
+        {
+            await productRepository.UpdateAsync(product);
+        }
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Не удалось обновить товар. Проверьте корректность введённых данных.");
+            return View(await BuildFormViewModelAsync(model));
+        }
         TempData["Success"] = "Товар обновлён.";
         return RedirectToAction(nameof(Index));
     }

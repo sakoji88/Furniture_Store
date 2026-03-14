@@ -159,6 +159,23 @@ public static class DataSeeder
                 ALTER TABLE [Products] ADD [IsArchived] bit NOT NULL CONSTRAINT [DF_Products_IsArchived] DEFAULT(0);
             END
 
+            -- Legacy-совместимость: в старой схеме мог быть обязательный столбец Stock.
+            -- Если он есть и без default-constraint, INSERT будет падать. Добавим default(0).
+            IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
+               AND COL_LENGTH('Products', 'Stock') IS NOT NULL
+               AND NOT EXISTS (
+                    SELECT 1
+                    FROM sys.default_constraints dc
+                    INNER JOIN sys.columns c
+                        ON c.object_id = dc.parent_object_id
+                       AND c.column_id = dc.parent_column_id
+                    WHERE dc.parent_object_id = OBJECT_ID(N'[Products]')
+                      AND c.name = 'Stock'
+               )
+            BEGIN
+                ALTER TABLE [Products] ADD CONSTRAINT [DF_Products_Stock_Legacy] DEFAULT(0) FOR [Stock];
+            END
+
             IF OBJECT_ID(N'[Products]', N'U') IS NOT NULL
                AND COL_LENGTH('Products', 'ImageUrl') IS NULL
             BEGIN

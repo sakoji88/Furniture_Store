@@ -24,8 +24,17 @@ public class CategoriesController(ApplicationDbContext dbContext) : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        dbContext.Categories.Add(model);
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            dbContext.Categories.Add(model);
+            await dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Не удалось сохранить категорию. Проверьте корректность данных и длину текста.");
+            return View(model);
+        }
+
         TempData["Success"] = "Категория добавлена.";
         return RedirectToAction(nameof(Index));
     }
@@ -47,8 +56,17 @@ public class CategoriesController(ApplicationDbContext dbContext) : Controller
         if (!ModelState.IsValid)
             return View(model);
 
-        dbContext.Categories.Update(model);
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            dbContext.Categories.Update(model);
+            await dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            ModelState.AddModelError(string.Empty, "Не удалось обновить категорию. Проверьте корректность введённых данных.");
+            return View(model);
+        }
+
         TempData["Success"] = "Категория обновлена.";
         return RedirectToAction(nameof(Index));
     }
