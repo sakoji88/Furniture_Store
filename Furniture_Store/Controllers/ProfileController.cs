@@ -21,22 +21,7 @@ public class ProfileController(ApplicationDbContext dbContext) : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        List<Models.Order> orders;
-        try
-        {
-            orders = await dbContext.Orders
-                .Include(o => o.Items)
-                    .ThenInclude(i => i.Product)
-                .AsNoTracking()
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
-        }
-        catch (InvalidCastException)
-        {
-            TempData["Error"] = "Обнаружена старая несовместимая схема таблицы заказов. Перезапустите приложение для автоисправления БД.";
-            return RedirectToAction("Index", "Products");
-        }
+        var orders = await TryLoadOrdersWithAutoFixAsync(userId);
 
         return View(new ProfileViewModel
         {
@@ -45,5 +30,63 @@ public class ProfileController(ApplicationDbContext dbContext) : Controller
             CreatedAt = user.CreatedAt,
             Orders = orders
         });
+    }
+
+    private async Task<List<Models.Order>> TryLoadOrdersWithAutoFixAsync(int userId)
+    {
+        try
+        {
+            return await LoadOrdersAsync(userId);
+        }
+        catch (InvalidCastException)
+        {
+            await dbContext.Database.ExecuteSqlRawAsync("""
+                IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+                   AND EXISTS (
+                        SELECT 1
+                        FROM sys.columns c
+                        INNER JOIN sys.types t ON c.user_type_id = t.user_type_id
+                        WHERE c.object_id = OBJECT_ID(N'[Orders]')
+                          AND c.name = 'Status'
+                          AND t.name IN ('varchar', 'nvarchar', 'char', 'nchar')
+                   )
+                BEGIN
+                    IF COL_LENGTH('Orders', 'StatusIntTemp') IS NULL
+                    BEGIN
+                        ALTER TABLE [Orders] ADD [StatusIntTemp] int NOT NULL CONSTRAINT [DF_Orders_StatusIntTemp_Profile] DEFAULT(1);
+                    END
+
+                    UPDATE [Orders]
+                    SET [StatusIntTemp] = COALESCE(
+                        CASE UPPER(CAST([Status] AS nvarchar(50)))
+                            WHEN 'PENDING' THEN 1
+                            WHEN 'PROCESSING' THEN 2
+                            WHEN 'SHIPPED' THEN 3
+                            WHEN 'COMPLETED' THEN 4
+                            WHEN 'CANCELLED' THEN 5
+                            ELSE NULL
+                        END,
+                        TRY_CAST([Status] AS int),
+                        1
+                    );
+
+                    ALTER TABLE [Orders] DROP COLUMN [Status];
+                    EXEC sp_rename 'Orders.StatusIntTemp', 'Status', 'COLUMN';
+                END
+                """);
+
+            return await LoadOrdersAsync(userId);
+        }
+    }
+
+    private Task<List<Models.Order>> LoadOrdersAsync(int userId)
+    {
+        return dbContext.Orders
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .AsNoTracking()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.CreatedAt)
+            .ToListAsync();
     }
 }
