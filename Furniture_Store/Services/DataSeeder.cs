@@ -192,6 +192,42 @@ public static class DataSeeder
                 );
             END
 
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'CreatedAt') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [CreatedAt] datetime2 NOT NULL CONSTRAINT [DF_Orders_CreatedAt_Legacy] DEFAULT (SYSUTCDATETIME());
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'RecipientName') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [RecipientName] nvarchar(100) NOT NULL CONSTRAINT [DF_Orders_RecipientName_Legacy] DEFAULT(N'');
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'Phone') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [Phone] nvarchar(20) NOT NULL CONSTRAINT [DF_Orders_Phone_Legacy] DEFAULT(N'');
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'DeliveryAddress') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [DeliveryAddress] nvarchar(200) NOT NULL CONSTRAINT [DF_Orders_DeliveryAddress_Legacy] DEFAULT(N'');
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'TotalAmount') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [TotalAmount] decimal(18,2) NOT NULL CONSTRAINT [DF_Orders_TotalAmount_Legacy] DEFAULT(0);
+            END
+
+            IF OBJECT_ID(N'[Orders]', N'U') IS NOT NULL
+               AND COL_LENGTH('Orders', 'Status') IS NULL
+            BEGIN
+                ALTER TABLE [Orders] ADD [Status] int NOT NULL CONSTRAINT [DF_Orders_Status_Legacy] DEFAULT(1);
+            END
+
             IF OBJECT_ID(N'[OrderItems]', N'U') IS NULL
             BEGIN
                 CREATE TABLE [OrderItems](
