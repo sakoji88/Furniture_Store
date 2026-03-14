@@ -1,0 +1,46 @@
+@model ProfileViewModel
+@using Furniture_Store.Models
+@{ ViewData["Title"] = "Профиль"; }
+
+<div class="profile-header mb-4">
+    <h2>@Model.FullName</h2>
+    <div class="text-muted">@Model.Email • регистрация: @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+</div>
+
+<h4>История заказов</h4>
+@if (!Model.Orders.Any())
+{
+    <div class="alert alert-info">У вас пока нет заказов.</div>
+}
+else
+{
+    <div class="accordion" id="ordersAccordion">
+        @for (var i = 0; i < Model.Orders.Count; i++)
+        {
+            var order = Model.Orders[i];
+            <div class="accordion-item mb-2 border rounded">
+                <h2 class="accordion-header" id="heading-@order.Id">
+                    <button class="accordion-button @(i > 0 ? "collapsed" : null)" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@order.Id">
+                        Заказ №@order.Id — @order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") — @order.TotalAmount.ToString("N0") ₽ — Статус: @order.Status
+                    </button>
+                </h2>
+                <div id="collapse-@order.Id" class="accordion-collapse collapse @(i == 0 ? "show" : null)" data-bs-parent="#ordersAccordion">
+                    <div class="accordion-body">
+                        <div><b>Получатель:</b> @order.RecipientName</div>
+                        <div><b>Телефон:</b> @order.Phone</div>
+                        <div class="mb-2"><b>Адрес:</b> @order.DeliveryAddress</div>
+                        <ul class="list-group">
+                            @foreach (var item in order.Items)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>@item.Product?.Name x @item.Quantity</span>
+                                    <span>@(item.UnitPrice * item.Quantity) ₽</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
